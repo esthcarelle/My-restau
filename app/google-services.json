@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "494789379259",
+    "firebase_url": "https://my-restau.firebaseio.com",
+    "project_id": "my-restau",
+    "storage_bucket": "my-restau.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:494789379259:android:c67f1b8b8de53be8cc159e",
+        "android_client_info": {
+          "package_name": "com.example.myrestau"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "494789379259-931jj5ub2ro4hp9eplqgouqbo249rp3e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.myrestau",
+            "certificate_hash": "b568cd138edb6ddfcdc6887fed2c728def628b31"
+          }
+        },
+        {
+          "client_id": "494789379259-jssfh2d7kui4qa16eb5071podfsobgm1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlE5ipciMHbESl7Iqeec0E9291_g08ygc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "494789379259-jssfh2d7kui4qa16eb5071podfsobgm1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
