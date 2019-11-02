@@ -1,6 +1,7 @@
 package com.example.myrestau.ui;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.preference.PreferenceManager;
 
 
@@ -23,6 +24,9 @@ import com.example.myrestau.R;
 import com.example.myrestau.adapters.RestaurantListAdapter;
 import com.example.myrestau.models.Restaurant;
 import com.example.myrestau.services.YelpService;
+import com.example.myrestau.util.OnRestaurantSelectedListener;
+
+import org.parceler.Parcels;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,97 +38,55 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
-public class RestaurantListActivity extends AppCompatActivity {
-    public static final String TAG = RestaurantListActivity.class.getSimpleName();
-    private ArrayList<Restaurant> restaurants = new ArrayList<>();
-    @BindView(R.id.recyclerView)
-    RecyclerView mRecyclerView;
-    private RestaurantListAdapter mAdapter;
+public class RestaurantListActivity extends AppCompatActivity implements OnRestaurantSelectedListener {
+    private Integer mPosition;
+    ArrayList<Restaurant> mRestaurants;
+    String mSource;
 
-    private SharedPreferences mSharedPreferences;
-    private SharedPreferences.Editor mEditor;
-    private String mRecentAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_restaurants);
-        ButterKnife.bind(this);
+        if (savedInstanceState != null) {
 
-        Intent intent = getIntent();
-        String location = intent.getStringExtra("location");
-        getRestaurants(location);
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+                mPosition = savedInstanceState.getInt(Constants.EXTRA_KEY_POSITION);
+                mRestaurants = Parcels.unwrap(savedInstanceState.getParcelable(Constants.EXTRA_KEY_RESTAURANTS));
+                mSource = savedInstanceState.getString(Constants.KEY_SOURCE);
 
 
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mRecentAddress = mSharedPreferences.getString(Constants.PREFERENCES_LOCATION_KEY, null);
-        if(mRecentAddress != null){
-            getRestaurants(mRecentAddress);
+                if (mPosition != null && mRestaurants != null) {
+                    Intent intent = new Intent(this, RestaurantDetailActivity.class);
+                    intent.putExtra(Constants.EXTRA_KEY_POSITION, mPosition);
+                    intent.putExtra(Constants.KEY_SOURCE, mSource);
+                    intent.putExtra(Constants.EXTRA_KEY_RESTAURANTS, Parcels.wrap(mRestaurants));
+                    startActivity(intent);
+                }
+
+            }
+
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu){
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_search, menu);
-        ButterKnife.bind(this);
-
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mEditor = mSharedPreferences.edit();
-
-        MenuItem menuItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(menuItem);
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String s) {
-                addToSharedPreferences(s);
-                getRestaurants(s);
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String s) {
-                return false;
-            }
-        });
-
-        return true;
-    }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-        return super.onOptionsItemSelected(item);
+    public void onRestaurantSelected(Integer position, ArrayList<Restaurant> restaurants, String source) {
+        mPosition = position;
+        mRestaurants = restaurants;
+        mSource = source;
+
     }
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
 
-    private void addToSharedPreferences(String location) {
-        mEditor.putString(Constants.PREFERENCES_LOCATION_KEY, location).apply();
-    }
+        if (mPosition != null && mRestaurants != null) {
+            outState.putInt(Constants.EXTRA_KEY_POSITION, mPosition);
+            outState.putParcelable(Constants.EXTRA_KEY_RESTAURANTS, Parcels.wrap(mRestaurants));
+            outState.putString(Constants.KEY_SOURCE, mSource);
+        }
 
-    private void getRestaurants(String location){
-        final YelpService yelpService = new YelpService();
-        yelpService.findRestaurants(location, new Callback(){
-
-            @Override
-            public void onFailure(Call call, IOException e){
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                restaurants = yelpService.processResults(response);
-                RestaurantListActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdapter = new RestaurantListAdapter(getApplicationContext(), restaurants);
-                        mRecyclerView.setAdapter(mAdapter);
-                        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(RestaurantListActivity.this);
-                        mRecyclerView.setLayoutManager(layoutManager);
-                        mRecyclerView.setHasFixedSize(true);
-                    }
-                });
-            }
-        });
     }
 
 

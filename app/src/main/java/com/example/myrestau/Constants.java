@@ -2,7 +2,7 @@ package com.example.myrestau;
 
 public class Constants {
     public static final String YELP_TOKEN = BuildConfig.YELP_API_KEY;
-    public static final String YELP_BASE_URL = "https://api.yelp.com/v3/businesses/search";
+    public static final String YELP_BASE_URL = "https://api.yelp.com/v3/businesses/search?term=restaurant";
     public static final String YELP_LOCATION_QUERY_PARAMETER = "location";
 
     //Data persistence _ Shared Preferences
@@ -16,4 +16,9 @@ public class Constants {
 
     //"index" key of our Restaurant objects used for referencing objects during querying
     public static final String FIREBASE_QUERY_INDEX = "index";
+    public static final String EXTRA_KEY_POSITION = "position";
+    public static final String EXTRA_KEY_RESTAURANTS = "restaurants";
+    public static final String KEY_SOURCE = "source";
+    public static final String SOURCE_SAVED = "saved";
+    public static final String SOURCE_FIND = "find";
 }

@@ -3,17 +3,23 @@ package com.example.myrestau.adapters;
 import android.content.Context;
 import android.content.Intent;
 
+import android.content.res.Configuration;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.myrestau.Constants;
 import com.example.myrestau.R;
 import com.example.myrestau.models.Restaurant;
 import com.example.myrestau.ui.RestaurantDetailActivity;
+import com.example.myrestau.ui.RestaurantDetailFragment;
+import com.example.myrestau.util.OnRestaurantSelectedListener;
 import com.squareup.picasso.Picasso;
 
 import org.parceler.Parcels;
@@ -27,16 +33,18 @@ import butterknife.ButterKnife;
 public class RestaurantListAdapter extends RecyclerView.Adapter<RestaurantListAdapter.RestaurantViewHolder> {
     private ArrayList<Restaurant> mRestaurants = new ArrayList<>();
     private Context mContext;
-
-    public RestaurantListAdapter(Context context, ArrayList<Restaurant> restaurants){
+    private int mOrientation;
+    private OnRestaurantSelectedListener mOnRestaurantSelectedListener;
+    public RestaurantListAdapter(Context context, ArrayList<Restaurant> restaurants, OnRestaurantSelectedListener restaurantSelectedListener){
         mContext = context;
         mRestaurants = restaurants;
+        mOnRestaurantSelectedListener = restaurantSelectedListener;
     }
 
     @Override
     public RestaurantListAdapter.RestaurantViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.restaurant_list_item, parent, false);
-        RestaurantViewHolder viewHolder = new RestaurantViewHolder(view);
+        RestaurantViewHolder viewHolder = new RestaurantViewHolder(view, mRestaurants, mOnRestaurantSelectedListener);
         return viewHolder;
     }
 
@@ -58,10 +66,25 @@ public class RestaurantListAdapter extends RecyclerView.Adapter<RestaurantListAd
 
         private Context mContext;
 
-        public RestaurantViewHolder(View itemView){
+        private int mOrientation;
+        private ArrayList<Restaurant> mRestaurants = new ArrayList<>();
+        private OnRestaurantSelectedListener mRestaurantSelectedListener;
+
+
+        public RestaurantViewHolder(View itemView, ArrayList<Restaurant> restaurants, OnRestaurantSelectedListener restaurantSelectedListener){
             super(itemView);
             ButterKnife.bind(this, itemView);
             mContext = itemView.getContext();
+
+            mOrientation = itemView.getResources().getConfiguration().orientation;
+            mRestaurants = restaurants;
+            mRestaurantSelectedListener = restaurantSelectedListener;
+
+            // Checks if the recorded orientation matches Android's landscape configuration.
+            // if so, we create a new DetailFragment to display in our special landscape layout:
+            if (mOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+                createDetailFragment(0);
+            }
             itemView.setOnClickListener(this);
         }
 
@@ -75,10 +98,25 @@ public class RestaurantListAdapter extends RecyclerView.Adapter<RestaurantListAd
         @Override
         public void onClick(View v){
             int itemPosition = getLayoutPosition();
-            Intent intent = new Intent(mContext, RestaurantDetailActivity.class);
-            intent.putExtra("position", itemPosition);
-            intent.putExtra("restaurants", Parcels.wrap(mRestaurants));
-            mContext.startActivity(intent);
+            if (mOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+                createDetailFragment(itemPosition);
+            } else {
+                Intent intent = new Intent(mContext, RestaurantDetailActivity.class);
+                intent.putExtra(Constants.EXTRA_KEY_POSITION, itemPosition);
+                intent.putExtra(Constants.EXTRA_KEY_RESTAURANTS, Parcels.wrap(mRestaurants));
+                intent.putExtra(Constants.KEY_SOURCE, Constants.SOURCE_FIND);
+                mContext.startActivity(intent);
+            }
         }
+    }
+    private void createDetailFragment(int position) {
+        // Creates new RestaurantDetailFragment with the given position:
+        RestaurantDetailFragment detailFragment = RestaurantDetailFragment.newInstance(mRestaurants, position);
+        // Gathers necessary components to replace the FrameLayout in the layout with the RestaurantDetailFragment:
+        FragmentTransaction ft = ((FragmentActivity) mContext).getSupportFragmentManager().beginTransaction();
+        //  Replaces the FrameLayout with the RestaurantDetailFragment:
+        ft.replace(R.id.restaurantDetailContainer, detailFragment);
+        // Commits these changes:
+        ft.commit();
     }
 }
